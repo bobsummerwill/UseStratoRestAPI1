@@ -11,7 +11,7 @@ yarn.lock
 .env.production.local
 
 # Credentials and configuration with sensitive data
-credentials.js
+credentials.yaml
 
 # Logs
 logs

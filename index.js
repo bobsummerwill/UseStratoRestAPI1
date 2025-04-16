@@ -1,5 +1,5 @@
 /**
- * Simplified application for accessing assets owned by the user specified in credentials.js
+ * Simplified application for accessing assets owned by the user specified in credentials.yaml
  * using automated OAuth login
  */
 
@@ -8,6 +8,11 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require("axios");
 const { oauthUtil } = require("blockapps-rest");
+const fs = require('fs');
+const yaml = require('js-yaml');
+
+// Load credentials from YAML file
+const credentials = yaml.load(fs.readFileSync('./credentials.yaml', 'utf8'));
 const { 
   marketplaceUrl, 
   userCommonName, 
@@ -15,7 +20,7 @@ const {
   baPassword, 
   clientId, 
   clientSecret 
-} = require("./credentials");
+} = credentials;
 
 // OAuth configuration
 const oauthInit = {
