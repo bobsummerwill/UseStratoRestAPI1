@@ -16,8 +16,6 @@ const credentials = yaml.load(fs.readFileSync('./credentials.yaml', 'utf8'));
 const { 
   clientUrl, 
   userCommonName, 
-  baUsername, 
-  baPassword, 
   clientId, 
   clientSecret 
 } = credentials;
@@ -45,7 +43,7 @@ const TOKEN_LIFETIME_RESERVE_SECONDS = 120; // Reserve 2 minutes for token expir
  * @throws Will throw an error if the token retrieval process fails.
  */
 const getUserToken = async () => {
-  const cacheKey = baUsername;
+  const cacheKey = clientId;
   const userTokenData = CACHED_DATA[cacheKey];
   const currentTime = Math.floor(Date.now() / 1000);
 
@@ -63,11 +61,12 @@ const getUserToken = async () => {
     // Initialize OAuth only if no valid cached token is available
     const oauth = await oauthUtil.init(oauthInit);
 
-    // Fetch a new token using Resource Owner Password Credentials
-    const tokenObj = await oauth.getAccessTokenByResourceOwnerCredential(
-      baUsername,
-      baPassword
+    // Fetch a new token using Client ID and secret
+    const tokenObj = await oauth.getAccessTokenByClientSecret(
+      clientId,
+      clientSecret
     );
+
     const token = tokenObj.token[oauthInit.tokenField];
     const expiresAt = Math.floor(tokenObj.token.expires_at / 1000);
     console.log("New OAuth token expires at:", new Date(expiresAt * 1000));
