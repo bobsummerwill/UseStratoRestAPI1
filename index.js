@@ -14,7 +14,7 @@ const yaml = require('js-yaml');
 // Load credentials from YAML file
 const credentials = yaml.load(fs.readFileSync('./credentials.yaml', 'utf8'));
 const { 
-  marketplaceUrl, 
+  clientUrl, 
   userCommonName, 
   baUsername, 
   baPassword, 
@@ -125,7 +125,7 @@ const createApiClient = (baseURL) => {
 };
 
 // Initialize API client
-const dbApiClient = createApiClient(`https://${marketplaceUrl}/cirrus/search`);
+const dbApiClient = createApiClient(`https://${clientUrl}/cirrus/search`);
 
 const app = express();
 const port = 3000;
