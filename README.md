@@ -21,6 +21,7 @@ To run this application, you need:
 - `oauth.js` - Handles OAuth authentication with the STRATO node
 - `test.js` - Sets up the API clients for interacting with the STRATO node
 - `credentials.js` - Contains the credentials for authentication and user common name
+- `credentials.template.js` - Template file with placeholders for setting up credentials
 - `index.js` - Main application with Express server and asset display functionality
 - `package.json` - Project dependencies and scripts
 
@@ -33,6 +34,10 @@ cd <repository-directory>
 
 # Install dependencies
 npm install
+
+# Set up credentials
+cp credentials.template.js credentials.js
+# Edit credentials.js with your own values
 ```
 
 ## Running the Application

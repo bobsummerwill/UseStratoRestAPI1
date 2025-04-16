@@ -9,20 +9,14 @@ const { baUsername, baPassword, clientId, clientSecret } = require("./credential
     clientId,
     clientSecret,
     scope: "email openid",
-    serviceOAuthFlow: null,
-    redirectUri: "http://localhost/api/v1/authentication/callback",
-    logoutRedirectUri: "http://localhost",
     tokenField: "access_token",
-    tokenUsernameProperty: null,
-    tokenUsernamePropertyServiceFlow: null,
+    redirectUri: "http://localhost/api/v1/authentication/callback",
+    logoutRedirectUri: "http://localhost"
   };
   
 
 
-  const CACHED_DATA = {
-    serviceToken: null,
-    serviceTokenExpiresAt: null,
-  };
+  const CACHED_DATA = {};
   
   const TOKEN_LIFETIME_RESERVE_SECONDS = 120; // Reserve 2 minutes for token expiration check
   

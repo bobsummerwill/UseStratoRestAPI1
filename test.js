@@ -1,5 +1,4 @@
 const axios = require("axios");
-//const logger = require("./logger");
 const { getUserToken } = require("./oauth");
 const { marketplaceUrl } = require("./credentials");
 
@@ -26,27 +25,18 @@ const createApiClient = (baseURL) => {
         config.headers.Authorization = `Bearer ${token}`;
         return config;
       } catch (error) {
-        //logger.error(`Failed to attach Authorization token: ${error.message}`);
         return Promise.reject(error);
       }
     },
     (error) => {
-      //logger.error(`API Request Error: ${error.message}`);
       return Promise.reject(error);
     }
   );
 
-  // Response interceptor to handle and log errors
+  // Response interceptor to handle errors
   client.interceptors.response.use(
     (response) => response,
     (error) => {
-      if (error.response) {
-        //logger.error(
-        //  `API Response Error [${error.response.status}]: ${error.response.statusText}`
-        //);
-      } else {
-        //logger.error(`API Network Error: ${error.message}`);
-      }
       return Promise.reject(error);
     }
   );
@@ -54,10 +44,7 @@ const createApiClient = (baseURL) => {
   return client;
 };
 
-// Initialize API clients
-const networkApiClient = createApiClient(
-  `https://${marketplaceUrl}/strato/v2.3`
-);
+// Initialize API client
 const dbApiClient = createApiClient(`https://${marketplaceUrl}/cirrus/search`);
 
-module.exports = { networkApiClient, dbApiClient };
+module.exports = { dbApiClient };
