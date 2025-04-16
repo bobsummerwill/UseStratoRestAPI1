@@ -6,7 +6,7 @@ This application demonstrates how to use the [blockapps-rest](https://www.npmjs.
 
 The application provides a single key functionality:
 
-1. **Asset Enumeration** - List all assets owned by the user configured in credentials.js using the `/find-user` endpoint
+1. **Asset Enumeration** - List all assets owned by the user configured in credentials.js
 
 ## Prerequisites
 
@@ -20,9 +20,9 @@ To run this application, you need:
 
 - `oauth.js` - Handles OAuth authentication with the STRATO node
 - `test.js` - Sets up the API clients for interacting with the STRATO node
-- `credentials.js` - Contains the credentials for authentication
+- `credentials.js` - Contains the credentials for authentication and user common name
 - `config.yaml` - Configuration file for connecting to STRATO nodes and OAuth settings
-- `index.js` - Main application with Express server and the /find-user endpoint
+- `index.js` - Main application with Express server and asset display functionality
 - `package.json` - Project dependencies and scripts
 
 ## Installation
@@ -44,9 +44,7 @@ To start the web application:
 npm start
 ```
 
-This will start an Express server at http://localhost:3000 where you can:
-- View the home page
-- Access the `/find-user` endpoint to view assets owned by the configured user
+This will start an Express server at http://localhost:3000 where you can view the assets owned by the user configured in credentials.js.
 
 ## Security Considerations
 

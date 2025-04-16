@@ -1,6 +1,6 @@
 /**
- * Simplified application for accessing the /find-user endpoint with automated OAuth login
- * to view assets owned by the user specified in credentials.js
+ * Simplified application for accessing assets owned by the user specified in credentials.js
+ * using automated OAuth login
  */
 
 // Import required packages
@@ -14,15 +14,6 @@ const port = 3000;
 
 // Configure middleware
 app.use(bodyParser.urlencoded({ extended: true }));
-
-// Setup Express routes
-app.get('/', (req, res) => {
-    res.send(`
-        <h1>STRATO REST API Sample</h1>
-        <p>This application demonstrates using the STRATO REST API to view assets.</p>
-        <p><a href="/find-user">View User Assets</a></p>
-    `);
-});
 
 // Helper function to safely format JSON for display
 const safelyFormatJSON = (obj) => {
@@ -58,11 +49,11 @@ const safelyFormatJSON = (obj) => {
     }
 };
 
-// Route to find a user and their assets
-app.get('/find-user', async (req, res) => {
+// Setup Express route for the root page
+app.get('/', async (req, res) => {
     try {
-        // Get owner common name from query parameter or use default from credentials
-        const ownerCommonName = req.query.ownerCommonName || `eq.${userCommonName}`;
+        // Get owner common name from credentials
+        const ownerCommonName = `eq.${userCommonName}`;
         
         // API call: Get the asset data from the database
         let assetResult = null;
@@ -126,42 +117,15 @@ app.get('/find-user', async (req, res) => {
                     font-family: monospace;
                     font-size: 14px;
                 }
-                .form-group {
-                    margin-bottom: 15px;
-                }
-                .form-group label {
-                    display: block;
-                    margin-bottom: 5px;
-                    font-weight: bold;
-                }
-                .form-group input {
-                    width: 100%;
-                    padding: 8px;
-                    border: 1px solid #ddd;
-                    border-radius: 4px;
-                    box-sizing: border-box;
-                }
-                button {
-                    background: #3498db;
-                    color: white;
-                    border: none;
-                    padding: 10px 15px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    font-size: 14px;
-                }
-                button:hover {
-                    background: #2980b9;
-                }
             </style>
         `;
         
-        // Render the find user page with results
+        // Render the page with results
         res.send(`
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Find User - STRATO REST API Sample</title>
+                <title>STRATO REST API Sample</title>
                 ${styles}
             </head>
             <body>
@@ -193,8 +157,6 @@ app.get('/find-user', async (req, res) => {
                             <p>API Response Status: ${assetResult ? assetResult.status : 'No response'}</p>
                         `}
                     </div>
-                    
-                    <p><a href="/">Back to home</a></p>
                 </div>
             </body>
             </html>
@@ -207,5 +169,5 @@ app.get('/find-user', async (req, res) => {
 // Start the server
 app.listen(port, () => {
     console.log(`Application listening at http://localhost:${port}`);
-    console.log(`Visit http://localhost:${port}/find-user to view user assets`);
+    console.log(`Visit http://localhost:${port} to view user assets`);
 });
