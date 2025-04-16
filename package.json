@@ -1,0 +1,41 @@
+{
+  "name": "usestratorestapi1",
+  "version": "1.0.0",
+  "description": "Sample application demonstrating the use of blockapps-rest package to interact with STRATO blockchain",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "example": "node example.js",
+    "advanced-example": "node advanced-example.js",
+    "find-user-assets": "node find-user-assets.js"
+  },
+  "keywords": [
+    "blockchain",
+    "strato",
+    "blockapps",
+    "ethereum",
+    "smart-contracts",
+    "dapp",
+    "sample"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.8.4",
+    "blockapps-rest": "^8.4.0",
+    "body-parser": "^1.20.3",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "js-yaml": "^4.1.0",
+    "querystring": "^0.2.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "example": "node example.js",
+    "advanced-example": "node advanced-example.js",
+    "find-user-assets": "node find-user-assets.js",
+    "generate-config": "node generate-config.js"
+  }
+}
