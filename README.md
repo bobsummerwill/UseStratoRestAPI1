@@ -18,11 +18,12 @@ To run this application, you need:
 
 ## Project Structure
 
-- `oauth.js` - Handles OAuth authentication with the STRATO node
-- `test.js` - Sets up the API clients for interacting with the STRATO node
+- `index.js` - Main application file containing all functionality:
+  - OAuth authentication with the STRATO node
+  - API client setup for interacting with the STRATO node
+  - Express server and asset display functionality
 - `credentials.js` - Contains the credentials for authentication and user common name
 - `credentials.template.js` - Template file with placeholders for setting up credentials
-- `index.js` - Main application with Express server and asset display functionality
 - `package.json` - Project dependencies and scripts
 
 ## Installation
