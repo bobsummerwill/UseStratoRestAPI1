@@ -12,7 +12,6 @@ yarn.lock
 
 # Credentials and configuration with sensitive data
 credentials.js
-config.yaml
 
 # Logs
 logs
