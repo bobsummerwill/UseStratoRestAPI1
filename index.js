@@ -136,22 +136,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Helper function to safely format JSON for display
 const safelyFormatJSON = (obj) => {
     try {
-        // Create a safe copy of the object without circular references
-        const getCircularReplacer = () => {
-            const seen = new WeakSet();
-            return (key, value) => {
-                if (typeof value === 'object' && value !== null) {
-                    if (seen.has(value)) {
-                        return '[Circular Reference]';
-                    }
-                    seen.add(value);
-                }
-                return value;
-            };
-        };
-        
-        // Stringify with circular reference handler
-        const jsonString = JSON.stringify(obj, getCircularReplacer(), 2);
+        // Stringify the object with standard formatting
+        const jsonString = JSON.stringify(obj, null, 2);
         
         // Escape HTML characters
         return jsonString
