@@ -187,6 +187,22 @@ const getOracleValues = async (apiClient) => {
                     latestPrices[oracle.name] = oracle.consensusPrice;
                 }
             });
+            
+            // Store reference to certain prices for mapping
+            const ethPrice = latestPrices['ETH'] || null;
+            const btcPrice = latestPrices['BTC'] || null;
+            const goldPrice = latestPrices['Gold'] || null;
+            const silverPrice = latestPrices['Silver'] || null;
+            
+            // Apply hard-coded price mappings
+            if (ethPrice) latestPrices['ETHST'] = ethPrice;
+            if (goldPrice) latestPrices['PAXGST'] = goldPrice;
+            if (silverPrice) latestPrices['Silver - Fractional 100 oz Bars'] = silverPrice;
+            latestPrices['STRAT'] = '1';
+            latestPrices['USDCST'] = '1';
+            latestPrices['USDST'] = '1';
+            latestPrices['USDTST'] = '1';
+            if (btcPrice) latestPrices['WBTCST'] = btcPrice;
         }
     } catch (error) {
         console.error('API Error:', error.message);
@@ -428,9 +444,63 @@ app.get('/', async (req, res) => {
                             ${sortedAssets.map((asset, index) => `
                                 <div class="asset-card">
                                     <div class="asset-header">
-                                        <span>${asset.name}: ${asset.decimals !== undefined && asset.decimals !== null ? 
-                                            calculateActualValue(asset.totalQuantity, asset.decimals) : 
-                                            asset.totalQuantity} (across ${asset.tokenCount} token${asset.tokenCount !== 1 ? 's' : ''})</span>
+                                        <span>${(() => {
+                                            // Format the basic asset information
+                                            const quantityDisplay = asset.decimals !== undefined && asset.decimals !== null ? 
+                                                calculateActualValue(asset.totalQuantity, asset.decimals) : 
+                                                asset.totalQuantity;
+                                            
+                                            let result = `${asset.name}: ${quantityDisplay} (across ${asset.tokenCount} token${asset.tokenCount !== 1 ? 's' : ''})`;
+                                            
+                                            // Add total value if oracle price exists
+                                            const price = latestPrices[asset.name];
+                                            if (price) {
+                                                // For very small values, we need to be careful with precision
+                                                try {
+                                                    // Calculate actual quantity as a number with full precision
+                                                    let actualQuantity;
+                                                    if (asset.decimals !== undefined && asset.decimals !== null) {
+                                                        // Use string operations for high precision
+                                                        const quantityStr = asset.totalQuantity.toString();
+                                                        const decimals = parseInt(asset.decimals);
+                                                        
+                                                        if (quantityStr.length <= decimals) {
+                                                            // Need to add leading zeros
+                                                            const missingZeros = decimals - quantityStr.length;
+                                                            actualQuantity = parseFloat('0.' + '0'.repeat(missingZeros) + quantityStr);
+                                                        } else {
+                                                            // Insert decimal point at the right position from the end
+                                                            const insertPosition = quantityStr.length - decimals;
+                                                            actualQuantity = parseFloat(quantityStr.substring(0, insertPosition) + '.' + quantityStr.substring(insertPosition));
+                                                        }
+                                                    } else {
+                                                        actualQuantity = asset.totalQuantity;
+                                                    }
+                                                    
+                                                    // Parse price with full precision
+                                                    const priceValue = parseFloat(price);
+                                                    
+                                                    // Calculate total value with maximum available precision
+                                                    let totalValue = actualQuantity * priceValue;
+                                                    
+                                                    // Special handling for very small values to avoid showing $0.00
+                                                    if (totalValue > 0 && totalValue < 0.01) {
+                                                        // For very small values, show at least $0.01
+                                                        result += `, worth $0.01`;
+                                                    } else {
+                                                        // Round to the nearest cent as requested
+                                                        const roundedValue = Math.round(totalValue * 100) / 100;
+                                                        result += `, worth $${roundedValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                                                    }
+                                                } catch (error) {
+                                                    // If any calculation errors occur, show a default value
+                                                    result += `, worth $0.01`;
+                                                    console.error('Error calculating worth:', error);
+                                                }
+                                            }
+                                            
+                                            return result;
+                                        })()}</span>
                                     </div>
                                     <div class="asset-value">
                                         <p>Oracle Value: ${(() => {
