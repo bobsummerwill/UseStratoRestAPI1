@@ -162,6 +162,39 @@ const getAssetsForCommonNameUser = async (apiClient, ownerCommonName) => {
     return { result, data };
 };
 
+/**
+ * Fetches oracle values from the Oracle Service and returns the latest price for each unique asset
+ * @param {AxiosInstance} apiClient - The API client to use for the request
+ * @returns {Promise<{result: Object|null, data: Array, latestPrices: Object}>} - The API result, raw oracle data, and processed latest prices
+ */
+const getOracleValues = async (apiClient) => {
+    let result = null;
+    let data = [];
+    let latestPrices = {};
+    
+    try {
+        result = await apiClient.get(
+            `/BlockApps-Mercata-OracleService`
+        );
+        
+        if (result && result.data) {
+            data = result.data;
+            
+            // Process data to keep only the latest price for each unique asset name
+            data.forEach(oracle => {
+                if (oracle.name && oracle.consensusPrice) {
+                    // Later entries will overwrite earlier ones
+                    latestPrices[oracle.name] = oracle.consensusPrice;
+                }
+            });
+        }
+    } catch (error) {
+        console.error('API Error:', error.message);
+    }
+    
+    return { result, data, latestPrices };
+};
+
 // ==========================================
 // Main application
 // ==========================================
@@ -245,8 +278,9 @@ app.get('/', async (req, res) => {
         // Get owner common name from credentials
         const ownerCommonName = `eq.${userCommonName}`;
         
-        // API call: Get the asset data from the database
+        // API calls: Get the asset data and oracle values from the database
         const { result: assetResult, data: assetData } = await getAssetsForCommonNameUser(dbApiClient, ownerCommonName);
+        const { result: oracleResult, data: oracleData, latestPrices } = await getOracleValues(dbApiClient);
         
         // Process asset data: group by name, sum quantities, and sort alphabetically
         const assetGroups = {};
@@ -334,6 +368,24 @@ app.get('/', async (req, res) => {
                         font-weight: bold;
                         color: #2980b9;
                     }
+                    .oracle-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 10px;
+                    }
+                    .oracle-table th, .oracle-table td {
+                        padding: 10px;
+                        text-align: left;
+                        border-bottom: 1px solid #e0e0e0;
+                    }
+                    .oracle-table th {
+                        background-color: #f5f5f5;
+                        font-weight: bold;
+                        color: #2c3e50;
+                    }
+                    .oracle-table tr:hover {
+                        background-color: #f0f8ff;
+                    }
                 </style>
             </head>
             <body>
@@ -346,6 +398,30 @@ app.get('/', async (req, res) => {
                     </div>
                     
                     <div class="card">
+                        <h2>Oracle Values</h2>
+                        ${Object.keys(latestPrices).length > 0 ? `
+                            <table class="oracle-table">
+                                <thead>
+                                    <tr>
+                                        <th>Asset Name</th>
+                                        <th>Latest Consensus Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${Object.entries(latestPrices).map(([name, price]) => `
+                                        <tr>
+                                            <td>${name}</td>
+                                            <td>$${price}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : `
+                            <p>No oracle data available</p>
+                        `}
+                    </div>
+                    
+                    <div class="card">
                         <h2>Asset Results</h2>
                         ${assetData.length > 0 ? `
                             <p>Found ${sortedAssets.length} unique asset types (from ${assetData.length} total assets) for owner: ${ownerCommonName.replace('eq.', '')}</p>
@@ -355,6 +431,17 @@ app.get('/', async (req, res) => {
                                         <span>${asset.name}: ${asset.decimals !== undefined && asset.decimals !== null ? 
                                             calculateActualValue(asset.totalQuantity, asset.decimals) : 
                                             asset.totalQuantity} (across ${asset.tokenCount} token${asset.tokenCount !== 1 ? 's' : ''})</span>
+                                    </div>
+                                    <div class="asset-value">
+                                        <p>Oracle Value: ${(() => {
+                                            // Get price from latest prices object
+                                            const price = latestPrices[asset.name];
+                                            if (price) {
+                                                return `$${price}`;
+                                            } else {
+                                                return 'No oracle value';
+                                            }
+                                        })()}</p>
                                     </div>
                                 </div>
                             `).join('')}
