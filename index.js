@@ -409,38 +409,134 @@ app.get('/', async (req, res) => {
                     <h1>User Assets</h1>
                     
                     <div class="card">
-                        <h2>User Information</h2>
-                        <p><strong>Owner Common Name:</strong> ${ownerCommonName.replace('eq.', '')}</p>
-                    </div>
-                    
-                    <div class="card">
-                        <h2>Oracle Values</h2>
-                        ${Object.keys(latestPrices).length > 0 ? `
-                            <table class="oracle-table">
-                                <thead>
-                                    <tr>
-                                        <th>Asset Name</th>
-                                        <th>Latest Consensus Price</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${Object.entries(latestPrices).map(([name, price]) => `
+                        <h2>Total Value</h2>
+                        <table class="oracle-table">
+                            <tbody>
+                                ${(() => {
+                                    // Calculate total values
+                                    let fungibleTokensCount = 0;
+                                    let fungibleTokensValue = 0;
+                                    let nonFungibleTokensCount = 0;
+                                    let cataTokensCount = 0;
+                                    
+                                    // Process each asset
+                                    sortedAssets.forEach(asset => {
+                                        const price = latestPrices[asset.name];
+                                        
+                                        if (asset.name === 'CATA') {
+                                            // Count CATA tokens separately
+                                            cataTokensCount += asset.tokenCount;
+                                            
+                                            // Calculate total CATA tokens (quantity)
+                                            try {
+                                                // Calculate actual quantity as a number with full precision
+                                                if (asset.decimals !== undefined && asset.decimals !== null) {
+                                                    // Use string operations for high precision
+                                                    const quantityStr = asset.totalQuantity.toString();
+                                                    const decimals = parseInt(asset.decimals);
+                                                    
+                                                    if (quantityStr.length <= decimals) {
+                                                        // Need to add leading zeros
+                                                        const missingZeros = decimals - quantityStr.length;
+                                                        asset.calculatedQuantity = parseFloat('0.' + '0'.repeat(missingZeros) + quantityStr);
+                                                    } else {
+                                                        // Insert decimal point at the right position from the end
+                                                        const insertPosition = quantityStr.length - decimals;
+                                                        asset.calculatedQuantity = parseFloat(quantityStr.substring(0, insertPosition) + '.' + quantityStr.substring(insertPosition));
+                                                    }
+                                                } else {
+                                                    asset.calculatedQuantity = asset.totalQuantity;
+                                                }
+                                            } catch (error) {
+                                                console.error('Error calculating CATA quantity:', error);
+                                                asset.calculatedQuantity = 0;
+                                            }
+                                        } else if (price) {
+                                            // This is a fungible token with a price oracle
+                                            fungibleTokensCount += asset.tokenCount;
+                                            
+                                            // Calculate value
+                                            try {
+                                                // Calculate actual quantity as a number with full precision
+                                                let actualQuantity;
+                                                if (asset.decimals !== undefined && asset.decimals !== null) {
+                                                    // Use string operations for high precision
+                                                    const quantityStr = asset.totalQuantity.toString();
+                                                    const decimals = parseInt(asset.decimals);
+                                                    
+                                                    if (quantityStr.length <= decimals) {
+                                                        // Need to add leading zeros
+                                                        const missingZeros = decimals - quantityStr.length;
+                                                        actualQuantity = parseFloat('0.' + '0'.repeat(missingZeros) + quantityStr);
+                                                    } else {
+                                                        // Insert decimal point at the right position from the end
+                                                        const insertPosition = quantityStr.length - decimals;
+                                                        actualQuantity = parseFloat(quantityStr.substring(0, insertPosition) + '.' + quantityStr.substring(insertPosition));
+                                                    }
+                                                } else {
+                                                    actualQuantity = asset.totalQuantity;
+                                                }
+                                                
+                                                // Parse price with full precision
+                                                const priceValue = parseFloat(price);
+                                                
+                                                // Calculate total value with maximum available precision
+                                                let totalValue = actualQuantity * priceValue;
+                                                
+                                                // Add to the running total
+                                                fungibleTokensValue += totalValue;
+                                            } catch (error) {
+                                                console.error('Error calculating total value:', error);
+                                            }
+                                        } else {
+                                            // This is a non-fungible token without a price oracle
+                                            nonFungibleTokensCount += asset.tokenCount;
+                                        }
+                                    });
+                                    
+                                    // Format the fungible tokens value
+                                    const formattedValue = fungibleTokensValue.toLocaleString(undefined, { 
+                                        minimumFractionDigits: 2, 
+                                        maximumFractionDigits: 2 
+                                    });
+                                    
+                                    return `
                                         <tr>
-                                            <td>${name}</td>
-                                            <td>$${price}</td>
+                                            <td>${fungibleTokensCount} Fungible tokens</td>
+                                            <td>worth $${formattedValue}</td>
                                         </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        ` : `
-                            <p>No oracle data available</p>
-                        `}
+                                        <tr>
+                                            <td>${nonFungibleTokensCount} non-fungible tokens</td>
+                                            <td>(unknown value)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>${cataTokensCount} CATA tokens</td>
+                                            <td>${(() => {
+                                                // Calculate total CATA tokens value
+                                                let totalCataTokens = 0;
+                                                sortedAssets.forEach(asset => {
+                                                    if (asset.name === 'CATA' && asset.calculatedQuantity) {
+                                                        totalCataTokens += asset.calculatedQuantity;
+                                                    }
+                                                });
+                                                
+                                                // Format the total CATA tokens
+                                                return totalCataTokens.toLocaleString(undefined, { 
+                                                    minimumFractionDigits: 2, 
+                                                    maximumFractionDigits: 6 
+                                                });
+                                            })()} CATA</td>
+                                        </tr>
+                                    `;
+                                })()}
+                            </tbody>
+                        </table>
                     </div>
                     
                     <div class="card">
-                        <h2>Asset Results</h2>
+                        <h2>Asset Breakdown</h2>
                         ${assetData.length > 0 ? `
-                            <p>Found ${sortedAssets.length} unique asset types (from ${assetData.length} total assets) for owner: ${ownerCommonName.replace('eq.', '')}</p>
+                            <p>Found ${sortedAssets.length} unique asset classes (across ${assetData.length} tokens) for owner: ${ownerCommonName.replace('eq.', '')}</p>
                             ${sortedAssets.map((asset, index) => `
                                 <div class="asset-card">
                                     <div class="asset-header">
@@ -502,17 +598,6 @@ app.get('/', async (req, res) => {
                                             return result;
                                         })()}</span>
                                     </div>
-                                    <div class="asset-value">
-                                        <p>Oracle Value: ${(() => {
-                                            // Get price from latest prices object
-                                            const price = latestPrices[asset.name];
-                                            if (price) {
-                                                return `$${price}`;
-                                            } else {
-                                                return 'No oracle value';
-                                            }
-                                        })()}</p>
-                                    </div>
                                 </div>
                             `).join('')}
                         ` : `
@@ -520,6 +605,7 @@ app.get('/', async (req, res) => {
                             <p>API Response Status: ${assetResult ? assetResult.status : 'No response'}</p>
                         `}
                     </div>
+                    
                 </div>
             </body>
             </html>
